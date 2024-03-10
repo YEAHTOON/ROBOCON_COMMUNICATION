@@ -1,0 +1,2 @@
+/usr/bin/ar qc /home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/lib/libyzt_uart.a CMakeFiles/yzt_uart.dir/code/uart/uart.cpp.o
+/usr/bin/ranlib /home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/lib/libyzt_uart.a

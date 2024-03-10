@@ -1,0 +1,6 @@
+/home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/build/CMakeFiles/yztuart.dir
+/home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/build/CMakeFiles/yzttcp.dir
+/home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/build/CMakeFiles/yztthread.dir
+/home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/build/CMakeFiles/com.dir
+/home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/build/CMakeFiles/edit_cache.dir
+/home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/build/CMakeFiles/rebuild_cache.dir

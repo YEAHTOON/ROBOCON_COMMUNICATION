@@ -1,0 +1,1 @@
+/usr/bin/c++ -rdynamic CMakeFiles/com.dir/code/main/main.cpp.o -o com  /home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/lib/libyztuart.a /home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/lib/libyzttcp.a /home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/lib/libyztthread.a 

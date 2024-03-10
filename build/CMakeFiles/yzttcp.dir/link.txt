@@ -1,0 +1,2 @@
+/usr/bin/ar qc /home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/lib/libyzttcp.a CMakeFiles/yzttcp.dir/code/tcp/tcp.cpp.o
+/usr/bin/ranlib /home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/lib/libyzttcp.a

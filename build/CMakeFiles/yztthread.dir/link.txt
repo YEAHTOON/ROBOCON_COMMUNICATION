@@ -1,0 +1,2 @@
+/usr/bin/ar qc /home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/lib/libyztthread.a CMakeFiles/yztthread.dir/code/thread/thread.cpp.o
+/usr/bin/ranlib /home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/lib/libyztthread.a
