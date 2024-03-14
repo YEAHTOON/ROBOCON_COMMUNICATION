@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <iostream>
 
 
 //小摄像头需要的数据

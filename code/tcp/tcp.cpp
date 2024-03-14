@@ -51,7 +51,6 @@ void yzt_tcp::connectToServer(Addr &addr, int socktNUM)
     sockaddr.sin_family = AF_INET;
 
     int ret = connect(socktNUM, (struct sockaddr*)&sockaddr, sizeof(sockaddr));
-    printf("%d\n", ret);
 }
 
 TCP_Manager::TCP_Manager(int socketNum)

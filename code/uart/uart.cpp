@@ -60,7 +60,7 @@ uart::uart(const char *filename, int baudrate)
     if(filename != nullptr)
     {
         this->fileDes = open(filename, O_RDWR | O_NOCTTY);
-        if(this->fileDes < 0) printf("open failed\n");
+        if(this->fileDes < 0) std::cout << "(WHU_ROBOCON_SENSOR) 错误 ： 打开串口失败，检查串口名、串口权限" << std::endl;
         this->baudrate = baudrate;
 
         // fcntl(fileDes, F_SETFL, 0);
@@ -128,8 +128,9 @@ int ttyFile::getFileNUm(void)
 
 uint8_t uart::uartRead(void)
 {
-    char result;
+    uint8_t result;
     int ret = read(fileDes, &result, 1);
+    // printf("%x : %ld\n", result, sizeof(result));
     return result;
 }
 

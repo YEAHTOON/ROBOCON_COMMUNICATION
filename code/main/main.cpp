@@ -4,16 +4,17 @@
 #include "stdio.h"
 #include "tcp.hpp"
 #include <errno.h>
+#include <iostream>
 
 
 //模块数
 #define MODULE_COUNT 1
 
 //包头包尾
-#define HEAD1 'n'
-#define HEAD2 'i'
-#define TAIL1 'a'
-#define TAIL2 'o'
+#define HEAD1 0xff
+#define HEAD2 0xfe
+#define TAIL1 0x0a
+#define TAIL2 0x0c
 
 //串口锁
 pthread_mutex_t uart_mutex;
@@ -49,20 +50,22 @@ void *GetInfo_From_Uart(void *args_void)
         if(d.input(args->u->uartRead()))
         {
             d.GetData(d_buff);      //存入结果
-            printf("uart get : %s\n", d_buff);
+            printf("uart get : %x\n", d_buff[0]);
 
             if((d_buff[0] == LIDAR_ID)&&(tcp_c_ms[0] != nullptr))       //对雷达的命令
             {
-                tcp_c_ms[0]->Send(d_buff+1, strlen((char *)d_buff)-1);
+                tcp_c_ms[0]->Send(d_buff+1, d.getSize() - 3);
             }
             else if((d_buff[0] == YOLO_ID)&&(tcp_c_ms[1] != nullptr))
             {
-                tcp_c_ms[1]->Send(d_buff+1, strlen((char *)d_buff)-1);
+                tcp_c_ms[1]->Send(d_buff+1, d.getSize() - 3);
             }
 
             memset(d_buff, 0, 128);
             d.clean_data();         //清理解码器内的数据
         }
+
+        usleep(1000);
     }
 }
 
@@ -85,11 +88,13 @@ void *SendInfo_To_Master(void *args_void)
     {
         //接收tcp消息
         args->tcp_c_m->Recv(buff, 128);
-        printf("tcp get: %s\n", buff);
 
         //已经断开了，解除套接字
         if(strlen((char *)buff) == 0) 
         {
+            //通知连接已断开
+            std::cout << "一个已经被确认过的连接断开，可能是从客户端断开的" << std::endl;
+
             //是雷达
             if(args->tcp_type == 0)
             {
@@ -104,9 +109,17 @@ void *SendInfo_To_Master(void *args_void)
             pthread_exit(NULL);
         }
 
+        //打印接收信息
+        printf("tcp get:");
+        for(int i = 0; i < buff[0]; i++)
+        {   
+            printf(" %2x", buff[i+1]);
+        }
+        printf("\n");
+
         //发送串口消息
         pthread_mutex_lock(&uart_mutex);
-        args->u->send(buff, strlen((char *)buff));
+        args->u->send(buff+1, buff[0]);
         pthread_mutex_unlock(&uart_mutex);
 
         //重置缓冲区
@@ -176,21 +189,83 @@ void *create_other_communications(void *args_void)
 }
 
 
+/**
+ * 安全且优雅的关闭方式
+*/
+struct 
+{
+    int socketNum[10];
+    int count;
+} SocketToClose;
+void crtlC(int signal_num)
+{
+    for(int i = 0; i < SocketToClose.count; i++)
+    {
+        close(SocketToClose.socketNum[i]);
+    }
+
+    std::cout << "Close Safely." << std::endl;
+    exit(1);
+}
+
 //主函数
 int main(void)
 {
+    SocketToClose.count = 0;
+    signal(SIGINT, crtlC);          //重定义关闭信号
+    signal(SIGTERM, crtlC);
+    auto AddCloseSockets = [&](int socketNum)
+    {
+        SocketToClose.socketNum[SocketToClose.count] = socketNum;
+        SocketToClose.count++;
+    };
+
     //锁的初始化
     pthread_mutex_init(&uart_mutex, nullptr);
 
     //串口初始化
-    uart u("/dev/ttyUSB0", B115200);
+    uart u("/dev/WhuRobocon_USB_serial", B115200);
     u.setparam();
     
     //创建套接字开始监听本地
     Addr localAddr((char *)"127.0.0.1", 30000);
     int LocalSocket = yzt_tcp::getBindSocket(localAddr);    //与本地地址相绑定的套接字
+    AddCloseSockets(LocalSocket);
+    printf("%d\n", LocalSocket);
     TCP_ListenManager tcp_listen_m(LocalSocket);            //建立监听套接字管理者
     tcp_listen_m.Listen();                                  //监听开始
+
+    //根据确认信息创建连接或者终端连接
+    const char *sure_list[10] = {"lidar", "yolo", "3", "4", "5", "6", "7", "8", "9", "10"};
+    auto DetermineConnection = [](char *sure, const char **sure_list, int index, int socketNum)
+    {
+        //是否匹配列表内的确认消息
+        if(strstr(sure, sure_list[index]))
+        {
+            //已经有连接的线程了，直接中断连接
+            if(tcp_c_ms[index] != nullptr){
+                close(socketNum);
+            }
+            //否则将新连接加入存在数组
+            else{
+                tcp_c_ms[index] = new TCP_CommunicationManager(socketNum);
+            }
+            return true;
+        }
+        //来自测试进程的连接
+        else if(strstr(sure, "try connection"))
+        {
+            TCP_CommunicationManager ReturnOK(socketNum);
+            const char *OK_message = "connection normal";
+            ReturnOK.Send((char *)OK_message, strlen(OK_message));
+            close(socketNum);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    };
 
     //建立全部的TCP连接
     pthread_t create_other_communications_id;
@@ -199,41 +274,29 @@ int main(void)
     {
         //同意连接，获得连接后的套接字号
         int socketNum = tcp_listen_m.Accept();
+        AddCloseSockets(socketNum);
 
         //获得确认信息
         char sure[128] = {0};
         recv(socketNum, sure, 128, MSG_WAITFORONE);
-        sleep(1);
-        
-        //是tcp另一端雷达的确认信息
-        if(strstr(sure, "lidar"))
+        printf("%s\n", sure);
+        // sleep(1);
+
+        //看看新连接的确认消息在不在确认消息列表内
+        int determine_count = 0;
+        for(; determine_count < 10; determine_count++)
         {
-            //已经有连接的线程了，直接中断连接
-            if(tcp_c_ms[0] != nullptr){
-                close(socketNum);
-            }
-            //否则将新连接加入存在数组
-            else{
-                tcp_c_ms[0] = new TCP_CommunicationManager(socketNum);
-            }
-        }
-        //是yolo的端口号
-        else if(strstr(sure, "yolo"))
-        {
-            //已经有连接的线程了，直接中断连接
-            if(tcp_c_ms[1] != nullptr){
-                close(socketNum);
-            }
-            //否则将新连接加入存在数组
-            else{
-                tcp_c_ms[1] = new TCP_CommunicationManager(socketNum);
-            }
+            bool SureValid = DetermineConnection(sure, sure_list, determine_count, socketNum);
+            if(SureValid) break;
         }
 
         //无效的端口号
-        else
+        if(determine_count == 10)
         {
             close(socketNum);
+            std::cout << "(WHU_ROBOCON_SENSOR) signal : 一个TCP的请求接入失败" << std::endl;
         }
+
+        memset(sure, 0, 128);
     }
 }
