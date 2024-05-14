@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <iostream>
+#include <signal.h>
 
 
 //小摄像头需要的数据
@@ -233,7 +234,7 @@ class uart
 public:
     uart(const char *filename, int baudrate);
     virtual void setparam(void);
-    void send(uint8_t *addr, size_t size);
+    int send(uint8_t *addr, size_t size);
     uint8_t uartRead(void);
     void closeCommu(void);
 private:

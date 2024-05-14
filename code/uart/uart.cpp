@@ -60,7 +60,13 @@ uart::uart(const char *filename, int baudrate)
     if(filename != nullptr)
     {
         this->fileDes = open(filename, O_RDWR | O_NOCTTY);
-        if(this->fileDes < 0) std::cout << "(WHU_ROBOCON_SENSOR) 错误 ： 打开串口失败，检查串口名、串口权限" << std::endl;
+        if(this->fileDes < 0) 
+        {
+            //退出进程
+            pid_t pid;
+            kill(pid, SIGTERM);
+            // std::cout << "(WHU_ROBOCON_SENSOR) 错误 ： 打开串口失败，检查串口名、串口权限" << std::endl;
+        }
         this->baudrate = baudrate;
 
         // fcntl(fileDes, F_SETFL, 0);
@@ -96,13 +102,14 @@ void uart::setparam(void)
     tcflush(this->fileDes ,TCIFLUSH);
 }
 
-void uart::send(uint8_t *addr, size_t size)
+int uart::send(uint8_t *addr, size_t size)
 {   
     if(addr != nullptr)
     {
         //传出
-        write(fileDes, addr, size);
+        return write(fileDes, addr, size);
     }
+    return 0;
 }
 
 void uart::closeCommu(void)
@@ -331,8 +338,8 @@ bool Decoding_ReceivedUartPack::input(uint8_t newU8_data)
 //获得数据
 void Decoding_ReceivedUartPack::GetData(uint8_t *target)
 {
-    memcpy(target, buff, (size-3));
-    buff[size - 3] = '\0';
+    memcpy(target, buff, (size-2));
+    buff[size - 2] = '\0';
     // clean_data();
 }
 

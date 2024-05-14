@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/./code/uart -I/home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/./code/tcp -I/home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/./code/thread
+CXX_INCLUDES = -I/home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/./code/uart -I/home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/./code/tcp -I/home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/./code/thread -I/home/yezhiteng/PROJECTS/PRODUCTS/COMMUNICATION/./code/log
 
 CXX_FLAGS = 
 

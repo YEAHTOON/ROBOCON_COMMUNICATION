@@ -12,7 +12,7 @@ aux_source_directory(./code/tcp TCP)
 aux_source_directory(./code/thread THREAD)  
 
 #包含头文件
-include_directories(${CODE_DIR}/uart ${CODE_DIR}/tcp ${CODE_DIR}/thread)
+include_directories(${CODE_DIR}/uart ${CODE_DIR}/tcp ${CODE_DIR}/thread ${CODE_DIR}/log)
 
 #生成静态库
 add_library(yztuart STATIC ${UART})
